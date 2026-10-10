@@ -1,12 +1,12 @@
 ---
 layout: post
-title: "Renounced ownership is not a verdict"
+title: "Renounced doesn't mean safe"
 ---
 
-"Ownership renounced" usually gets read as a clean bill of health. After
-reviewing a launchpad token template on mainnet, I think it's closer to a coin
-flip: it's good news for some kinds of danger and bad news for others, and the
-token's page on a block explorer won't tell you which kind you're looking at.
+"Ownership renounced" usually gets read as "safe". After reviewing a launchpad
+token template on mainnet, I don't think it works that way. Renouncing is good
+news for some kinds of danger and bad news for others, and a block explorer
+won't tell you which kind you're looking at.
 
 ## The template
 
@@ -30,14 +30,14 @@ way. A buyer can read five values on-chain and know their exposure for good.
 Working through the findings, they split into two groups that behave in
 opposite ways when ownership is renounced.
 
-**Owner powers** are things a privileged address can choose to do later. In
+Owner powers are things a privileged address can choose to do later. In
 this template, `multi_bclist()` freezes up to 200 holders per call.
 `completeCustoms()` can move the sell tax to 24.99% in one transaction. Set
 `setNumTokensSellRate()` high enough and the multiplication in the sell path
 overflows, so every sell reverts while buys keep working. Renouncing kills all
 of these permanently, since nobody can call them anymore.
 
-**Baked-in mechanisms** run by themselves on every transfer, with nobody
+Baked-in mechanisms run by themselves on every transfer, with nobody
 calling anything. The template has an airdrop loop that sends 1 wei to
 `airdropNumbs` derived addresses on every trade and then does:
 
@@ -56,12 +56,12 @@ the first `kb` blocks get flagged, and flagged addresses can never sell. Once
 the owner is gone, nobody can clear the flag either.
 
 So the same `owner() = 0xdead` is good news for the first group and bad news
-for the second. A tool that prints one verdict for "renounced" is wrong for
-half the cases.
+for the second. A tool that gives one verdict for "renounced" gets one of the
+two groups wrong.
 
 ## Turning it into something a buyer can use
 
-"Read five booleans" isn't useful advice unless you know which five. So I built
+"Read five values" isn't much help unless you know which five. So I built
 [token-powers](https://vuduykhang2306.github.io/token-powers/): paste a mainnet
 ERC-20 and it tells you which owner powers exist and which mechanisms are
 baked in, and labels them separately.
@@ -71,8 +71,8 @@ template and a few other token families (`isReward`, `isBlacklisted`,
 `_blackList` and so on). No token implements all of them. Each one is called,
 and a revert counts as an answer: that power isn't there.
 
-Flags tell you what powers exist, not whether a sell would go through right
-now. For that, the page runs an `eth_call` with a state override. It gives the
+Flags only tell you which powers exist. To check whether a sell would go
+through right now, the page runs an `eth_call` with a state override. It gives the
 wallet a balance it doesn't have, tries the transfer to the pair, and checks
 whether the EVM reverts. To find which storage slot holds balances, it tries
 the first 32 slots: compute `keccak256(address . slot)`, override it, read

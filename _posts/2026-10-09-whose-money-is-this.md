@@ -27,8 +27,8 @@ devWallet.call{value: address(this).balance}("");
 The first time I looked at it I was working on M-01, whether the swap could be
 re-entered through the router. The second time was M-02: both `call`s throw
 away their return value, so a fee wallet that can't receive ETH loses the
-payout silently. Both real findings. Both times my question was the same:
-*is this call safe?*
+payout silently. Both real findings. Both times my question was the same: is
+this call safe?
 
 Neither time did I ask where `address(this).balance` comes from.
 
@@ -38,7 +38,7 @@ balance. So the first sell after a dividend deposit sends the holders' money to
 the fee wallets. `pendingDividend` isn't touched. The ledger still says the
 holders are owed it, and their claims revert because the ETH is gone.
 
-The PoC is boring, which is what makes it bad. Deposit 10 ETH of dividends for
+The PoC doesn't need anything clever. Deposit 10 ETH of dividends for
 one holder. A different holder sells 1,000 tokens and the swap returns 2 ETH of
 real fees. Each fee wallet receives 6 ETH. That's 12 ETH out, 10 of which
 belonged to someone else. Contract balance ends at zero, ledger still records
@@ -58,13 +58,14 @@ sum(feesOwed) + sum(pendingDividend) <= address(this).balance
 Every ETH the contract has promised to someone has to be sitting in its
 balance. It's a one-line statement, but once it's written down the next
 question asks itself: which paths move the balance without moving the ledger?
-`_swapBack()` is one of them. Two careful passes over the function hadn't
-shown me that. One line describing the whole contract did.
+`_swapBack()` is one of them. I hadn't seen that in two passes over the
+function. Writing the property is what showed it to me.
 
 The fixed version already survived it. My M-02 patch had switched to a pull
 pattern, and while doing that I measured `received` as the balance difference
 across the swap instead of using the raw balance. So H-04 was closed before I
-knew it existed. I'd like to say that was foresight. It was luck.
+knew it existed. That was luck. I hadn't seen the problem when I wrote that
+fix.
 
 ## The lesson
 

@@ -4,9 +4,8 @@ title: "A green fuzzing run doesn't prove much"
 ---
 
 I ran the same four invariants under two fuzzers, expecting one of them to
-catch something the other missed. Neither did. That's the result, and I'm
-writing it down because what came out of it was more useful than what I went
-in looking for.
+catch something the other missed. Neither did. I'm writing it up anyway,
+because something more useful came out of it.
 
 ## The setup
 
@@ -60,11 +59,11 @@ The ETH backing failure is H-04, the dividend pool bug my manual review missed
 ([I wrote about it here]({% post_url 2026-10-09-whose-money-is-this %})). Echidna reached
 it in five calls, without the harness ever mentioning `_swapBack()`.
 
-The max-wallet property passes on both contracts, and I'd rather say why than
-hide it. The harness bounds `setMaxWallet` to at least 1% of supply, because a
-campaign that keeps freezing every transfer stops exploring. So that property
-can't fail here by construction. The floor is covered by a normal retest
-instead. That's a limit of the control and it's written in the repo as one.
+The max-wallet property passes on both contracts. That's because the harness
+bounds `setMaxWallet` to at least 1% of supply, since a campaign that keeps
+freezing every transfer stops exploring. So that property can't fail here at
+all, and the floor is covered by a normal retest instead. The repo lists this
+as a limit of the control.
 
 CI now checks all four outcomes by name: fixed contract passes, original
 contract fails on exactly those two. If a later change to the harness stops it
@@ -79,8 +78,8 @@ executed lines are marked with `*`:
 grep -E 'feesOwed\[|received = |revert TaxTooHigh' echidna-corpus/covered.*.txt
 ```
 
-All ten actions and every ETH path in the fixed contract show up as executed.
-That's a much stronger statement than "it passed".
+All ten actions and every ETH path in the fixed contract show up as executed,
+so the passing run did go through the code it was supposed to test.
 
 ## Two things that cost me time
 
@@ -96,8 +95,8 @@ out-of-gas.
 ## What I'm keeping
 
 Any invariant suite I write from now on comes with a negative control: the same
-properties pointed at something known to be broken, and required to fail. Until
-I've seen a property fail, I don't count it as tested.
+properties run against a version that is known to be broken, and required to
+fail, with CI checking that they still do.
 
 The harnesses and the failing sequences are in
 [`test/echidna/`](https://github.com/Vuduykhang2306/smart-contract-security-lab/tree/main/test/echidna).

@@ -29,10 +29,10 @@ if (to == pair && !isExcludedFromFee[from] && balanceOf[address(this)] >= swapTh
 
 `!isExcludedFromFee[from]` is false on re-entry, so there's no second swap.
 
-So the contract doesn't have a recursion bug. But what stops it isn't a
-reentrancy lock. It's a mapping whose job is fee exemption, and nothing in the
-code says it's also holding up reentrancy safety. `setExcludedFromFee(address(this), false)`
-looks like a perfectly normal admin call, and it removes the guard.
+So there's no recursion bug. What stops it is a mapping meant for fee
+exemption, and nothing in the code says it also prevents reentrancy.
+`setExcludedFromFee(address(this), false)` looks like a normal admin call, and
+it removes the guard.
 
 That was the finding, and the PoC had to be rewritten to show it: one sell that
 works, then the admin call, then the next sell reverting. I'd assumed the
@@ -59,9 +59,9 @@ The fix in the report is a pull pattern. `_swapBack()` only credits
 `feesOwed[wallet]`, and each wallet withdraws separately. A broken wallet only
 hurts itself.
 
-Finding the wrong line was the easy part of this one. The real work was
-answering "how do I fix this without creating a new bug", and I don't think the
-first answer is usually the right one.
+Finding the wrong line was the easy part of this one. The hard part was
+answering "how do I fix this without creating a new bug", and my first answer
+to that was wrong.
 
 ## L-01: almost a Medium
 
@@ -82,15 +82,14 @@ fewer decimals, or in a share-price calculation, stops being harmless, and it
 costs nothing to fix.
 
 I moved it to Low and wrote the reason into the report, so anyone reading it
-can check the downgrade instead of taking my word for it. An inflated High makes the real Highs worth less, and a reviewer who
-catches one overstated severity will start discounting the rest.
+can check the downgrade instead of taking my word for it. An inflated High
+makes the real ones count for less.
 
 ## Looking back
 
 M-01 was wrong about the mechanism, M-02 about the fix, L-01 about the impact.
-Getting one of those right told me nothing about the other two. They're three
-separate questions, and a finding isn't finished until all three have been
-asked.
+Getting one of those right told me nothing about the other two, because they
+are three separate questions.
 
 All three are in the
 [report](https://github.com/Vuduykhang2306/smart-contract-security-lab/blob/main/reports/2026-09_MemeTax_audit-report.md)
