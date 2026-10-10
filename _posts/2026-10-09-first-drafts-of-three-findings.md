@@ -16,7 +16,7 @@ out and every sell reverts. I wrote the PoC expecting a revert.
 
 The sell went through fine.
 
-It took me a while to see why. When the router calls
+The reason was in the call path. When the router calls
 `transferFrom(token, pair, amount)`, the re-entered frame has
 `from == address(token)`. The constructor marks the token contract as
 fee-exempt. The swap trigger looks like this:
@@ -50,9 +50,10 @@ obvious one, add `require(ok)`.
 
 Then I thought about where `_swapBack()` runs. It runs inside the `_transfer()`
 of whoever is selling. If a fee wallet can't receive ETH and the payout
-reverts, the user's sell reverts too. Every sell, for every holder, until the
-owner changes the wallet. I would have swapped a silent accounting loss for a
-denial of service on the whole token.
+reverts, the user's sell reverts too. Every sell, for every holder. MemeTax has
+no setter for the fee wallets, so swapping in a working one isn't even an
+option. I would have traded a silent accounting loss for a denial of service on
+the whole token.
 
 The fix in the report is a pull pattern. `_swapBack()` only credits
 `feesOwed[wallet]`, and each wallet withdraws separately. A broken wallet only
@@ -80,15 +81,16 @@ It still belongs in the report, because the same expression in a token with
 fewer decimals, or in a share-price calculation, stops being harmless, and it
 costs nothing to fix.
 
-I moved it to Low and put that calculation in the report so the reasoning is
-visible. An inflated High makes the real Highs worth less, and a reviewer who
+I moved it to Low and wrote the reason into the report, so anyone reading it
+can check the downgrade instead of taking my word for it. An inflated High makes the real Highs worth less, and a reviewer who
 catches one overstated severity will start discounting the rest.
 
 ## Looking back
 
 M-01 was wrong about the mechanism, M-02 about the fix, L-01 about the impact.
-Getting one of those right told me nothing about the other two, so I now check
-them separately before a finding goes into a report.
+Getting one of those right told me nothing about the other two. They're three
+separate questions, and a finding isn't finished until all three have been
+asked.
 
 All three are in the
 [report](https://github.com/Vuduykhang2306/smart-contract-security-lab/blob/main/reports/2026-09_MemeTax_audit-report.md)

@@ -19,7 +19,7 @@ The work these posts refer to is public:
 - [token-powers](https://github.com/Vuduykhang2306/token-powers), a read-only
   page that tells you what an ERC-20's deployer can still do to holders.
 
-I write here when something took me longer than it should have. That is most
-of what I have learned so far.
+The posts here are mostly about the parts of that work I got wrong the first
+time.
 
 Email: vuduykhang23062008@gmail.com

@@ -66,7 +66,7 @@ pattern, and while doing that I measured `received` as the balance difference
 across the swap instead of using the raw balance. So H-04 was closed before I
 knew it existed. I'd like to say that was foresight. It was luck.
 
-## What I do differently now
+## The lesson
 
 Reading a function shows you bugs inside the function. H-04 isn't inside
 `_swapBack()`. It lives between `_swapBack()` and `depositDividend()`, and
@@ -74,12 +74,12 @@ neither one is wrong when you read it alone. Unit tests don't help here either,
 since a unit test only checks a scenario I already thought of, and I hadn't
 thought of this one.
 
-So when a contract holds value for more than one party, I now write down who
-owns each wei before I read any function. Fee proceeds belong to the fee
-wallets. The dividend pool belongs to holders. Then for every path that sends
-ETH out, the question is whose share it's paying from, not whether the call is
-safe. If the answer is "whatever happens to be in the balance", that's the
-finding.
+To see bugs between functions, you have to state an invariant for the whole
+contract and then go looking for paths that break it. For a contract holding
+ETH on behalf of more than one party, that starts with who owns each wei. Fee
+proceeds belong to the fee wallets. The dividend pool belongs to holders. Then
+for every path that sends ETH out, ask whose share it's paying from. If the
+answer is "whatever happens to be in the balance", that's the finding.
 
 The full write-up is
 [H-04 in the report](https://github.com/Vuduykhang2306/smart-contract-security-lab/blob/main/reports/2026-09_MemeTax_audit-report.md#h-04),
