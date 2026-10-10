@@ -1,0 +1,9 @@
+title: Vu Duy Khang
+description: Notes from reading smart contracts, mostly the parts I got wrong first.
+author: Vu Duy Khang
+url: "https://vuduykhang2306.github.io"
+github_username: Vuduykhang2306
+theme: minima
+show_excerpts: true
+header_pages:
+  - about.md
